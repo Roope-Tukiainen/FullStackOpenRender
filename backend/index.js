@@ -8,22 +8,22 @@ let persons = [
   {
     "name": "Arto Hellas",
     "number": "040-123456",
-    "id": "1"
+    "id": 1
   },
   {
     "name": "Ada Lovelace",
     "number": "39-44-5323523",
-    "id": "2"
+    "id": 2
   },
   {
     "name": "Dan Abramov",
     "number": "12-43-234345",
-    "id": "3"
+    "id": 3
   },
   {
     "name": "Mary Poppendieck",
     "number": "39-23-6423122",
-    "id": "4"
+    "id": 4
   }
 ]
 
@@ -52,13 +52,25 @@ const morganCustom = (tokens, request, response) => {
   ].join(" ")
 }
 
+/*
+Makes automatically routes for each file in frontend and returns the file.
+E.g. 
+  GET host/ -> index.html (special case),
+  GET host/index.html -> index.html (normal case),
+  GET host/script -> script.js (normal case)
+  GET host/scripts/script2 -> script2.js (normal case)
+*/
+app.use(express.static('./frontend'))
+/*
+Basically response.setHeader('Access-Control-Allow-Origin', '*')
+For all responses
+*/
 app.use(cors())
+// If header: Content-Type: application/json then parse it to object
 app.use(express.json())
+// Custom logger
 app.use(morgan(morganCustom))
 
-app.get('/api/persons', (request, response) => {
-  response.json(persons)
-})
 
 app.get('/info', (request, response) => {
   response.send(
@@ -69,8 +81,12 @@ app.get('/info', (request, response) => {
   )
 })
 
-app.get('/api/persons/:id', (request, response) => {
-  const reqId = request.params.id
+app.get('/persons', (request, response) => {
+  response.json(persons)
+})
+
+app.get('/persons/:id', (request, response) => {
+  const reqId = Number(request.params.id)
   const reqPerson = persons.find(person => person.id === reqId)
   reqPerson === undefined ?
     response.status(404).end()
@@ -79,7 +95,7 @@ app.get('/api/persons/:id', (request, response) => {
 })
 
 
-app.post('/api/persons/',(request, response) => {
+app.post('/persons',(request, response) => {
   const data = request.body
   if (!data.hasOwnProperty("name") || !data.hasOwnProperty("number")) {
     return (
@@ -107,10 +123,16 @@ app.post('/api/persons/',(request, response) => {
 })
 
 
-app.delete('/api/persons/:id', (request, response) => {
-  const reqId = request.params.id
+app.delete('/persons/:id', (request, response) => {
+  const reqId = Number(request.params.id)
   persons = persons.filter(person => person.id !== reqId)
   response.status(204).end()
+})
+
+app.put('/persons/:id', (request, response) => {
+  console.log(`PUT TODO! ${JSON.stringify(request.body)}`)
+  // Muista palautaa uusi ja päivitetty -> send(request.body)
+  response.status(201).end()
 })
 
 
