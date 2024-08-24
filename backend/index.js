@@ -96,9 +96,6 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
-  if (!body.hasOwnProperty("name") || !body.hasOwnProperty("number")) {
-    return response.status(400).json({error: "JSON must have valid keys: name, number"})
-  }
   const person = new Person({
     name: body.name,
     number: body.number
@@ -123,18 +120,19 @@ app.post('/api/persons', (request, response, next) => {
 
 app.put('/api/persons/:id', (request, response, next) => {
   const body = request.body
-  if (!body.hasOwnProperty("name") || !body.hasOwnProperty("number")) {
-    return response.status(400).json({error: "JSON must have valid keys: name, number"})
-  }
   const person = {name: body.name, number: body.number}
-  Person.findByIdAndUpdate(request.params.id, person, {new: true})
-    .then(updatedPerson => {
-      updatedPerson !== null ?
-        response.json(updatedPerson)
-      :
-        response.status(500).json({error: "Couldn't find person responding to the id"})
-    })
-    .catch(error => next(error))
+  Person.findByIdAndUpdate(
+    request.params.id, 
+    person, 
+    {new: true, runValidators: true, context: "query"}
+  )
+  .then(updatedPerson => {
+    updatedPerson !== null ?
+      response.json(updatedPerson)
+    :
+      response.status(500).json({error: "Couldn't find person responding to the id"})
+  })
+  .catch(error => next(error))
 })
 
 
@@ -156,8 +154,9 @@ app.use(unknownEndpoint)
 
 const errorHandler = (error, request, response, next) => {
   const eName = error.name
+  const eMessage  = error.message
 
-  console.error(error.message)
+  console.error(eMessage)
 
   if (error.name === "CastError") {
     return response.status(400).send({error: "malformatted id"})
@@ -167,6 +166,10 @@ const errorHandler = (error, request, response, next) => {
     return response.status(400).json({error: `person with the same name already exists in database`})
   }
   
+  if (eName ===  "ValidationError") {
+    return response.status(400).json({error: eMessage})
+  }
+
   if (eName === "MongooseError") {
     return response.status(500).json({error: "database error"})
   }

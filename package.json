@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node ./backend/index.js",
     "dev": "nodemon ./backend/index.js",
+    "build_front": "npm --prefix ../puhelinluettelo_frontend_src/ run build && rmdir /s /q .\\frontend && xcopy ..\\puhelinluettelo_frontend_src\\dist\\* .\\frontend\\ /E /Y",
     "test": "echo There are no tests"
   },
   "author": "Roope Tukiainen",
